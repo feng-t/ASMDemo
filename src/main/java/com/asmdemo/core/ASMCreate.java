@@ -1,16 +1,18 @@
 package com.asmdemo.core;
 
-import com.asmdemo.test.JavaProxy;
 import com.asmdemo.utils.ClassUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ASMCreate extends ClassLoader implements Opcodes {
 
@@ -18,7 +20,9 @@ public class ASMCreate extends ClassLoader implements Opcodes {
     private Class<?> subClass;
     private boolean save = false;
 
-    public void setSave(boolean save) {
+    private Map<String,MethodBack>handlerMap=new ConcurrentHashMap<>();
+
+    public void save(boolean save) {
         this.save = save;
     }
 
@@ -74,6 +78,7 @@ public class ASMCreate extends ClassLoader implements Opcodes {
         }
         Class<?>[] parametersClasses = new Class<?>[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
+
             parametersClasses[i] = parameters[i].getClass();
         }
         Constructor<?> constructor = subClass.getConstructor(parametersClasses);
@@ -89,8 +94,8 @@ public class ASMCreate extends ClassLoader implements Opcodes {
         }
         ClassReader cr = new ClassReader(superClass.getName());
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
-        ClassHandler handler = new ClassHandler(cw);
-        handler.setParameter(parameters);
+        ClassHandler handler = new ClassHandler(cw,parameters);
+        handler.setMethodHandler(handlerMap);
         cr.accept(handler, ClassReader.SKIP_DEBUG);
         if (save) {
             File file = new File(Thread.currentThread().getContextClassLoader().getResource(".").getPath()
@@ -109,6 +114,7 @@ public class ASMCreate extends ClassLoader implements Opcodes {
     }
 
 
-
-
+    public void invoke(String key, MethodBack back) {
+        handlerMap.put(key,back);
+    }
 }
