@@ -1,14 +1,19 @@
 package com.asmdemo.test;
 
 
-public class JavaProxy {
+public class JavaProxy{
 
+    public int i=99;
     public String s;
-    public JavaProxy(String sd){
-        this.s=sd;
+    public JavaProxy(){
+        this.s="test";
     }
 
-    public void test1(){
-        System.out.println(s);
+    public int test1() {
+        return i;
     }
+
+
+
+
 }
