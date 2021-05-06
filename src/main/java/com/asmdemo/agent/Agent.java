@@ -1,4 +1,4 @@
-package com.asmdemo.test;
+package com.asmdemo.agent;
 
 import com.sun.tools.attach.*;
 

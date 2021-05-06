@@ -1,7 +1,6 @@
-package com.asmdemo.test;
+package com.asmdemo.agent;
 
 
-import com.asmdemo.core.ClassGenerator;
 import org.objectweb.asm.*;
 
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package com.asmdemo;
 
 
-import com.asmdemo.test.JavaProxy;
+import com.asmdemo.agent.JavaProxy;
 
 public class Demo extends ClassLoader{
     public static void main(String[] args) throws Exception {

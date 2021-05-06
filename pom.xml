@@ -55,8 +55,8 @@
                         </manifest>
                         <manifestEntries>
                             <Manifest-Version>1.0</Manifest-Version>
-                            <Premain-Class>com.asmdemo.test.Agent</Premain-Class>
-                            <Agent-Class>com.asmdemo.test.Agent</Agent-Class>
+                            <Premain-Class>com.asmdemo.agent.Agent</Premain-Class>
+                            <Agent-Class>com.asmdemo.agent.Agent</Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
 

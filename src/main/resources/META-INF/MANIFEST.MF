@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
-Agent-Class: com.asmdemo.test.Agent
-Premain-Class: com.asmdemo.test.Agent
+Agent-Class: com.asmdemo.agent.Agent
+Premain-Class: com.asmdemo.agent.Agent
 Can-Redefine-Classes: true
 Can-Retransform-Classes: true
 Build-Jdk-Spec: 1.8

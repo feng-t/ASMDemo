@@ -3,7 +3,7 @@ package com.asmdemo.core;
 import com.asmdemo.core.clases.ClassSubGenerator;
 import com.asmdemo.core.method.MethodEnhance;
 import com.asmdemo.core.method.MethodInfo;
-import com.asmdemo.test.JavaProxy;
+import com.asmdemo.agent.JavaProxy;
 import org.objectweb.asm.*;
 
 import java.io.File;
