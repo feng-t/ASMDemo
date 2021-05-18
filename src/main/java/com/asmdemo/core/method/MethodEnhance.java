@@ -1,22 +1,21 @@
 package com.asmdemo.core.method;
 
-import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-public class MethodEnhance extends MethodAdapter implements Opcodes{
+public class MethodEnhance extends MethodVisitor implements Opcodes{
     private MethodInfo method;
     public Type[] types ;
 
     /**
-     * Constructs a new {@link MethodAdapter} object.
+     * Constructs a new {@link MethodVisitor} object.
      *
      * @param mv     the code visitor to which this adapter must delegate calls.
      * @param method
      */
     public MethodEnhance(MethodVisitor mv, MethodInfo method) {
-        super(mv);
+        super(Opcodes.ASM9,mv);
         this.method = method;
         types = Type.getArgumentTypes(method.desc);
     }
@@ -44,7 +43,7 @@ public class MethodEnhance extends MethodAdapter implements Opcodes{
 
                 mv.visitVarInsn(getReturnToLoad(opcode), types.length + 1);
 
-                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V");
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V",false);
 
                 mv.visitVarInsn(getReturnToLoad(opcode), types.length + 1);
             }

@@ -1,7 +1,8 @@
-package com.asmdemo.proxy;
+package com.asmdemo.cglib.proxy;
 
 
 public class MethodFastClass$JavaBean$Proxy implements MethodFastClass {
+
     @Override
     public int getIndex(Signature signature) {
         String s = signature.toString();

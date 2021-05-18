@@ -17,12 +17,12 @@ public class ProxyBean extends ClassLoader {
     public void run() throws IOException, InstantiationException, IllegalAccessException {
         ClassReader cr = new ClassReader(JavaProxy.class.getName());
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
-        ClassAdapter ca = new ClassAdapter(cw) {
+        ClassVisitor ca = new ClassVisitor(Opcodes.ASM9,cw) {
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
                 MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
                 if (name.equals("test1")) {
-                    mv = new MethodAdapter(mv) {
+                    mv = new MethodVisitor(Opcodes.ASM9,mv) {
                         @Override
                         public void visitInsn(int opcode) {
                             if ((opcode >= Opcodes.IRETURN && opcode <= Opcodes.RETURN)

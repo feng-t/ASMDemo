@@ -5,9 +5,10 @@ import org.objectweb.asm.*;
 /**
  * 空方法
  */
-public class MethodSubGenerator implements MethodVisitor {
+public class MethodSubGenerator extends MethodVisitor {
     private MethodInfo info;
     public MethodSubGenerator(MethodInfo info){
+        super(Opcodes.ASM9);
         this.info=info;
     }
     @Override

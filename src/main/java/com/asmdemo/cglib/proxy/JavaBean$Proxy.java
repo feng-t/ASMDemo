@@ -1,4 +1,4 @@
-package com.asmdemo.proxy;
+package com.asmdemo.cglib.proxy;
 
 /**
  * 带$符号的表示由ASM生成的
@@ -16,7 +16,6 @@ public class JavaBean$Proxy extends JavaBean{
     }
     @Override
     public void test1() {
-
         if (methodCallBack!=null){
             Object invoke = methodCallBack.invoke(this, new Object[0], new MethodProxy(methodFastClass, "test1", "()V"));
         }else {
@@ -49,16 +48,15 @@ public class JavaBean$Proxy extends JavaBean{
         return super.test3(a,b);
     }
 
-//    public static void main(String[] args) {
-//        JavaBean$Proxy bean = new JavaBean$Proxy();
-//        bean.setMethodCallBack((obj, parameter, proxy) -> {
-//            System.out.println("before");
-//            Object invoke = proxy.invoke(obj, parameter);
-//            System.out.println(invoke);
-//            System.out.println("after");
-//            return invoke;
-//        });
-//        bean.test1();
-//
-//    }
+    public static void main(String[] args) {
+        JavaBean$Proxy bean = new JavaBean$Proxy();
+        bean.setMethodCallBack((obj, parameter, proxy) -> {
+            System.out.println("before");
+            Object invoke = proxy.invoke(obj, parameter);
+            System.out.println(invoke);
+            System.out.println("after");
+            return invoke;
+        });
+        bean.test1();
+    }
 }

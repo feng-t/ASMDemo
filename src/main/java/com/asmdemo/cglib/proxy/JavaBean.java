@@ -1,4 +1,4 @@
-package com.asmdemo.proxy;
+package com.asmdemo.cglib.proxy;
 
 public class JavaBean {
     public void test1(){

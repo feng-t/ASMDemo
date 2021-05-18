@@ -1,4 +1,4 @@
-package com.asmdemo.proxy;
+package com.asmdemo.cglib.proxy;
 
 public interface MethodFastClass {
      int getIndex(Signature signature);
