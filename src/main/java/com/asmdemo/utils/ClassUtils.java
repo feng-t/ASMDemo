@@ -4,6 +4,11 @@ import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 public class ClassUtils {
     public static String defineSubClassName(String className) {
         return className + "$0";
@@ -59,7 +64,7 @@ public class ClassUtils {
             case "byte":
                 return Byte.class.getName();
             default:
-                return Object.class.getName();
+                return s;
         }
     }
 
@@ -73,6 +78,23 @@ public class ClassUtils {
         return boxId;
     }
 
+    public static void saveClass(String path,byte[] bytes ){
+        if (!path.endsWith(".class")){
+            path=path+".class";
+        }
+        try {
+            File file = new File(path);
+            if (!file.getParentFile().exists()){
+                file.getParentFile().mkdirs();
+            }
+            file.createNewFile();
+            FileOutputStream stream = new FileOutputStream(path);
+            stream.write(bytes);
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
         getParameterTypes("(IIJLjava/lang/Long;B)V");

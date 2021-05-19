@@ -18,6 +18,7 @@ public class ProxyBean extends ClassLoader {
         ClassReader cr = new ClassReader(JavaProxy.class.getName());
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
         ClassVisitor ca = new ClassVisitor(Opcodes.ASM9,cw) {
+
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
                 MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
@@ -29,7 +30,7 @@ public class ProxyBean extends ClassLoader {
                                     || opcode == Opcodes.ATHROW) {
                                 mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
                                 mv.visitLdcInsn("test--结束了");
-                                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+                                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V",false);
                             }
                             mv.visitInsn(opcode);
                         }

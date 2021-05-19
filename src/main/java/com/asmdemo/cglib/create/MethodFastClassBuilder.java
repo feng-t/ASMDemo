@@ -4,6 +4,7 @@ import com.asmdemo.cglib.proxy.JavaBean;
 import com.asmdemo.cglib.proxy.MethodFastClass;
 import com.asmdemo.utils.ClassUtils;
 import com.asmdemo.utils.FileUtils;
+import com.asmdemo.utils.MethodUtils;
 import org.objectweb.asm.*;
 
 import java.io.IOException;
@@ -28,6 +29,10 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
         this.proxyName = proxyName;//.replaceAll("\\.", "/") + "$proxy" + (UUID.randomUUID().toString().substring(0, 5));
         this.proxyClass = proxyClass;
         processMethod();
+    }
+
+    public String getProxyName() {
+        return proxyName;
     }
 
     /**
@@ -124,48 +129,24 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
             Label defaultLabel = new Label();
             mv.visitVarInsn(ILOAD, 1);
             mv.visitTableSwitchInsn(0, labels.length - 1, defaultLabel, labels);
-            Integer[] array = methodToIndex.keySet().toArray(new Integer[0]);
-            Arrays.sort(array);
             for (int i = 0; i < labels.length; i++) {
                 mv.visitLabel(labels[i]);
-                String s = methodToIndex.get(array[i]);
-                String[] methodInfo = s.split("\\|");
+                String[] methodInfo = methodDescriptors.get(i).split("\\|");
                 if (i == 0) {
-                    mv.visitFrame(Opcodes.F_APPEND, 1, new Object[]{this.proxyName}, 0, null);
+                    mv.visitFrame(Opcodes.F_APPEND, 1, new Object[]{name}, 0, null);
                 } else {
                     mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                 }
                 mv.visitVarInsn(ALOAD, 4);
                 if (!methodInfo[1].startsWith("()")) {
-                    //强转参数
-                    Type[] types = Type.getType(methodInfo[1]).getArgumentTypes();
-                    String[] parameterTypes = ClassUtils.getParameterTypes(methodInfo[1]);
-                    for (int index = 0; index < types.length; index++) {
-                        String ow = parameterTypes[index].replaceAll("\\.", "/");
-                        String ty = types[index].getClassName();
-                        System.out.print(ow+"\t");
-                        System.out.print(Arrays.toString(methodInfo) +"\t");
-                        System.out.println(ty);
-                        mv.visitVarInsn(ALOAD, 3);
-                        if (index <= 5) {
-                            mv.visitInsn(i + 3);
-                        } else {
-                            mv.visitIntInsn(BIPUSH, index);
-                        }
-                        mv.visitInsn(AALOAD);
-                        //强转参数
-                        mv.visitTypeInsn(CHECKCAST, ow);
-                        if (!ty.contains(".")) {
-                            mv.visitMethodInsn(INVOKEVIRTUAL, ow,  ty+ "Value","()"+methodInfo[1].split("\\)")[1], false);
-                        }
-                    }
+                    MethodUtils.transfer(mv,methodInfo[1],3);
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, this.proxyName, methodInfo[0] + "$proxy", methodInfo[1], false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, name, methodInfo[0] + "$proxy", methodInfo[1], false);
                 if (methodInfo[1].endsWith("V")) {
                     mv.visitInsn(ACONST_NULL);
                     mv.visitInsn(ARETURN);
                 } else {
-//                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                    MethodUtils.returnType(mv, methodInfo[1]);
                     mv.visitInsn(ARETURN);
                 }
 
@@ -177,7 +158,7 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
             mv.visitMaxs(4, 5);
             mv.visitEnd();
         }
-        FileUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/name.class", cw.toByteArray());
+        FileUtils.saveFile("F:\\projects\\ASMDemo\\target\\classes\\com\\name.class", cw.toByteArray());
         return cw.toByteArray();
     }
 
