@@ -6,13 +6,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 public class MethodUtils implements Opcodes {
-
-    public static void main(String[] args) {
-        returnType(null, "(Ljava/lang/Double;Ljava/lang/Integer;II)I");
-//        Type types = Type.getType("(I)V");
-//        System.out.println(Arrays.toString(types.getArgumentTypes()));
-    }
-
     /**
      * 数组参数强转
      *
@@ -24,15 +17,25 @@ public class MethodUtils implements Opcodes {
     public static MethodVisitor transfer(MethodVisitor mv, String des, int index) {
         Type type = Type.getType(des);
         Type[] argumentTypes = type.getArgumentTypes();
+        System.out.print("方法描述：");
         for (int i = 0; i < argumentTypes.length; i++) {
             Type argumentType = argumentTypes[i];
             String typeClassName = argumentType.getClassName();
             String box = ClassUtils.getBox(typeClassName);
             String descriptor = argumentType.getDescriptor();
+            System.out.print(typeClassName+"\t");
+            System.out.print(des+"\t");
+            System.out.print(descriptor+"\t");
+            System.out.println(argumentTypes.length);
             mv.visitVarInsn(ALOAD, index);
-            mv.visitIntInsn(SIPUSH, i);
-            mv.visitInsn(AALOAD);
-            mv.visitTypeInsn(CHECKCAST, box.replaceAll("\\.", "/"));
+
+            if (argumentTypes.length>1) {
+                mv.visitIntInsn(SIPUSH, i);
+                mv.visitInsn(AALOAD);
+            }
+            if (!descriptor.equals("[Ljava/lang/Object;")) {
+                mv.visitTypeInsn(CHECKCAST, descriptor);
+            }
             if (!descriptor.contains("L")) {
                 mv.visitMethodInsn(INVOKEVIRTUAL, box.replaceAll("\\.", "/"), typeClassName + "Value", "()" + descriptor, false);
             }
@@ -61,7 +64,6 @@ public class MethodUtils implements Opcodes {
             mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
             return;
         }
-//        mv.visitTypeInsn(CHECKCAST, ClassUtils.getBox(returnType.getClassName()).replaceAll("\\.","/"));
         mv.visitMethodInsn(INVOKESTATIC, ClassUtils.getBox(returnType.getClassName()).replaceAll("\\.","/"), "valueOf", "("+descriptor+")L"+ ClassUtils.getBox(returnType.getClassName()).replaceAll("\\.","/")+";", false);
     }
 }

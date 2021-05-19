@@ -1,5 +1,6 @@
 package com.asmdemo.cglib.create;
 
+import com.asmdemo.agent.JavaProxy;
 import com.asmdemo.cglib.proxy.JavaBean;
 import com.asmdemo.cglib.proxy.MethodFastClass;
 import com.asmdemo.utils.ClassUtils;
@@ -46,6 +47,7 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
             public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
                 if (!name.equals("<init>")) {
                     methodDescriptors.add(name + "|" + descriptor);
+                    System.out.println("代理方法："+name+descriptor);
                 }
                 return super.visitMethod(access, name, descriptor, signature, exceptions);
             }
@@ -57,15 +59,7 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
         String name = this.proxyName.replaceAll("\\.", "/") + "$proxy$MethodFastClass";
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         cw.visit(V1_8, ACC_PUBLIC | ACC_SUPER, name, null, "java/lang/Object", new String[]{Type.getInternalName(MethodFastClass.class)});
-        MethodVisitor mv;
-        {
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
+        MethodVisitor mv=MethodUtils.createInit(cw);
         {
             //getIndex
             mv = cw.visitMethod(ACC_PUBLIC, "getIndex", "(Ljava/lang/String;)I", null, null);
@@ -81,7 +75,6 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
                 labels[i] = new Label();
             }
             Label defaultLabel = new Label();
-            System.out.println("打印方法");
             for (int i = 0; i < methodDescriptors.size(); i++) {
                 String s = methodDescriptors.get(i);
                 keys[i] = s.replaceAll("\\|", "").hashCode();
@@ -164,11 +157,11 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
 
 
     public static void main(String[] args) throws IOException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        Class<JavaBean> beanClass = JavaBean.class;
+        Class<JavaProxy> beanClass = JavaProxy.class;
         String proxyClass = beanClass.getName().replaceAll("\\.", "/") + "$proxy" + (UUID.randomUUID().toString().substring(0, 5));
         MethodFastClassBuilder builder = new MethodFastClassBuilder(beanClass, proxyClass);
         byte[] bytes = builder.create();
-        Class<?> aClass = builder.defineClass((proxyClass + "$proxy$MethodFastClass").replaceAll("/", "\\."), bytes, 0, bytes.length);
+        Class<?> aClass = builder.defineClass((proxyClass+"$proxy$MethodFastClass").replaceAll("/", "\\."), bytes, 0, bytes.length);
         Method index = aClass.getMethod("getIndex", String.class);
 
         Object invoke = index.invoke(aClass.newInstance(), "test1()V");
