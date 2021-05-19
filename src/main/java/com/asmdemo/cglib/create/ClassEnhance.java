@@ -9,11 +9,15 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class ClassEnhance implements Opcodes {
     protected Class<?> proxyClass;
     protected MethodFastClass methodFastClass;
     protected MethodCallBack methodCallBack;
+    private List<String> methodInfos= Collections.synchronizedList(new ArrayList<>());
 
     public void setSuperClass(Class<?> proxyClass) {
         this.proxyClass = proxyClass;
@@ -33,6 +37,7 @@ public class ClassEnhance implements Opcodes {
     private void create0() throws IOException {
         ClassReader cr = new ClassReader(proxyClass.getName());
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
+
     }
     class JavaBean_proxy extends JavaBean{
         @Override

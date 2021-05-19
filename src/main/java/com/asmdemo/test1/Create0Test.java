@@ -4,6 +4,7 @@ import com.asmdemo.cglib.proxy.JavaBean;
 import com.asmdemo.cglib.proxy.MethodCallBack;
 import com.asmdemo.cglib.proxy.MethodProxy;
 import com.asmdemo.utils.ClassUtils;
+import com.asmdemo.utils.FileUtils;
 import org.objectweb.asm.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -79,7 +80,7 @@ public class Create0Test extends ClassLoader implements Opcodes  {
         }
         cw.visitEnd();
 
-        ClassUtils.saveClass("F:\\projects\\ASMDemo\\target\\classes\\"+name+"$proxy2",cw.toByteArray());
+        FileUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/"+name+"$proxy2",cw.toByteArray());
         bytes = cw.toByteArray();
         Class<?> create2 = this.defineClass("com.asmdemo.proxy.create2", bytes, 0, bytes.length);
         Object o2 = create2.newInstance();

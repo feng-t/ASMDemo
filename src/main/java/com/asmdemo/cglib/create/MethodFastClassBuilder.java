@@ -1,9 +1,7 @@
 package com.asmdemo.cglib.create;
 
 import com.asmdemo.agent.JavaProxy;
-import com.asmdemo.cglib.proxy.JavaBean;
 import com.asmdemo.cglib.proxy.MethodFastClass;
-import com.asmdemo.utils.ClassUtils;
 import com.asmdemo.utils.FileUtils;
 import com.asmdemo.utils.MethodUtils;
 import org.objectweb.asm.*;
@@ -47,7 +45,6 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
             public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
                 if (!name.equals("<init>")) {
                     methodDescriptors.add(name + "|" + descriptor);
-                    System.out.println("代理方法："+name+descriptor);
                 }
                 return super.visitMethod(access, name, descriptor, signature, exceptions);
             }
@@ -59,7 +56,7 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
         String name = this.proxyName.replaceAll("\\.", "/") + "$proxy$MethodFastClass";
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         cw.visit(V1_8, ACC_PUBLIC | ACC_SUPER, name, null, "java/lang/Object", new String[]{Type.getInternalName(MethodFastClass.class)});
-        MethodVisitor mv=MethodUtils.createInit(cw);
+        MethodVisitor mv= MethodUtils.createInit(cw);
         {
             //getIndex
             mv = cw.visitMethod(ACC_PUBLIC, "getIndex", "(Ljava/lang/String;)I", null, null);
@@ -151,7 +148,7 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
             mv.visitMaxs(4, 5);
             mv.visitEnd();
         }
-        FileUtils.saveFile("F:\\projects\\ASMDemo\\target\\classes\\com\\name.class", cw.toByteArray());
+        FileUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/name.class", cw.toByteArray());
         return cw.toByteArray();
     }
 
