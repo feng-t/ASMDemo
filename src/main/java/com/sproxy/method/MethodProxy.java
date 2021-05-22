@@ -3,6 +3,9 @@ package com.sproxy.method;
 public class MethodProxy {
     private MethodFastClass methodFastClass;
     private Signature sig;
+    public String methodInfo(){
+        return sig.toString();
+    }
 
     public MethodProxy(MethodFastClass methodFastClass, String name, String desc) {
         sig = new Signature(name, desc);
@@ -10,6 +13,7 @@ public class MethodProxy {
     }
 
     public Object invoke(Object obj, Object[] args) {
-        return methodFastClass.invoke(methodFastClass.getIndex(sig), obj, args);
+        int index = methodFastClass.getIndex(sig.toString());
+        return methodFastClass.invoke(index, obj, args);
     }
 }
