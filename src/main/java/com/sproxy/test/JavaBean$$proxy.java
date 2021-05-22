@@ -48,15 +48,4 @@ public class JavaBean$$proxy extends JavaBean{
         }
     }
 
-    public static void main(String[] args) {
-        JavaBean$$proxy p = new JavaBean$$proxy((obj, parameter, proxy) -> {
-            System.out.println("执行前"+proxy.methodInfo());
-            return proxy.invoke(obj,parameter);
-        });
-
-        p.d("test");
-
-
-
-    }
 }

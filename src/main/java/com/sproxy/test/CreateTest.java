@@ -1,11 +1,8 @@
 package com.sproxy.test;
 
-import com.sproxy.builder.ClassEnhance;
 import com.sproxy.utils.ClassUtils;
-import com.sproxy.utils.MethodUtils;
 import org.objectweb.asm.*;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 public class CreateTest extends ClassLoader implements Opcodes {

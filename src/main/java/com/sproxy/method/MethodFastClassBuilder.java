@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
     public static Map<String, byte[]> map = new ConcurrentHashMap<>();
     public static Map<String, MethodFastClass> instances = new ConcurrentHashMap<>();
-    public static Map<String, Class<?>> proxyClasses = new ConcurrentHashMap<>();
 
     private MethodFastClassBuilder() {
     }
@@ -54,13 +53,15 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
         return (Class<MethodFastClass>) defineClass(fastClass, bytes, 0, bytes.length);
     }
 
+    /**
+     * 只允许代理类调用，因为此方法再要代理类被加载之后调用
+     * @param proxyClass
+     * @return
+     */
     public MethodFastClass create(Class<?>proxyClass) {
         String name = proxyClass.getName();
         MethodFastClass methodFastClass = instances.get(name);
         if (methodFastClass==null){
-            if (proxyClasses.get(name)==null){
-                //TODO 创建代理类
-            }
             Class<MethodFastClass> build = build(proxyClass);
             try {
                 methodFastClass = build.newInstance();
