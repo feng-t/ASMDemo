@@ -18,15 +18,20 @@ import java.util.*;
 
 import static com.sun.jmx.snmp.ThreadContext.contains;
 
-public class ClassEnhance extends ClassLoader implements Opcodes {
+public class ClassEnhance implements Opcodes {
     private Class<?> proxyClass;
+    private Class<?> targetClass;
     private MethodCallBack callBack;
     private List<String> methodInfos = Collections.synchronizedList(new ArrayList<>());
     private List<MethodInfo> createMethods = Collections.synchronizedList(new ArrayList<>());
     private byte[] bytes;
+    private String subClassName;
+    private CustomClassLoader loader=CustomClassLoader.getInstance();
+
 
 
     public void setProxyClass(Class<?> proxyClass) {
+
         this.proxyClass = proxyClass;
     }
 
@@ -35,21 +40,44 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
     }
 
     public Object create(Object... objects) {
-        if (bytes == null) {
+        Object obj = null;
+        try {
+            if (bytes == null || targetClass == null) {
+                bytes = createProxyClass();
+                targetClass = loader.findClass(this.subClassName, bytes);
+            }
+            Class<?>[] classes = new Class<?>[objects.length+1];
+            classes[0]=MethodCallBack.class;
+            for (int i = 1; i < objects.length; i++) {
+                Class<?> c = objects[i - 1].getClass();
+                if (c.isPrimitive()) {
 
+                }
+            }
+            Constructor<?> constructor = targetClass.getConstructor(classes);
+            obj = constructor.newInstance(objects);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return null;
+        return obj;
+    }
+
+    public String getSubClassName() {
+        return subClassName;
     }
 
     private byte[] createProxyClass() throws IOException {
-        final String proxyName = Type.getInternalName(this.proxyClass) + "$$proxy";
+        String suffix = ClassUtils.uuid();
+//        String suffix = "$$proxy5";
+        final String proxyName = Type.getInternalName(this.proxyClass) + suffix;
+        this.subClassName = proxyName.replaceAll("/", ".");
         String className = this.proxyClass.getName();
+
         ClassReader cr = new ClassReader(className);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
         ClassVisitor visitor = new ClassVisitor(Opcodes.ASM9, cw) {
             @Override
             public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-
                 super.visit(version, access, proxyName, signature, name, interfaces);
             }
 
@@ -86,10 +114,10 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
             mv.visitCode();
             Label l0 = new Label();
             mv.visitLabel(l0);
-            mv.visitLineNumber(24, l0);
             mv.visitMethodInsn(INVOKESTATIC, "com/sproxy/method/MethodFastClassBuilder", "getInstance", "()Lcom/sproxy/method/MethodFastClassBuilder;", false);
             mv.visitLdcInsn(Type.getType(this.proxyClass));
-            mv.visitMethodInsn(INVOKEVIRTUAL, "com/sproxy/method/MethodFastClassBuilder", "create", "(Ljava/lang/Class;)Lcom/sproxy/method/MethodFastClass;", false);
+            mv.visitLdcInsn(proxyName);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "com/sproxy/method/MethodFastClassBuilder", "create", "(Ljava/lang/Class;Ljava/lang/String;)Lcom/sproxy/method/MethodFastClass;", false);
             mv.visitFieldInsn(PUTSTATIC, proxyName, "methodFastClass", Type.getDescriptor(MethodFastClass.class));
             Label l1 = new Label();
             mv.visitLabel(l1);
@@ -143,7 +171,7 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
                 mv.visitEnd();
 
             } else {
-                mv = cw.visitMethod(ACC_PRIVATE, info.name + "$proxy", info.descriptor, info.signature, info.exceptions);
+                mv = cw.visitMethod(ACC_PUBLIC, info.name + "$proxy", info.descriptor, info.signature, info.exceptions);
                 mv.visitCode();
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
                 Type type = Type.getType(info.descriptor);
@@ -168,11 +196,6 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
 
                     Label l2 = new Label();
                     Label l3 = null;
-
-//                    mv.visitLabel(l2);
-//                    mv.visitVarInsn(ALOAD,0);
-//                    mv.visitFieldInsn(GETFIELD, proxyName, "methodCallBack", "Lcom/sproxy/method/MethodCallBack;");
-
 
                     mv.visitLabel(l2);
                     mv.visitVarInsn(ALOAD, 0);
@@ -202,25 +225,16 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
                     if (!info.descriptor.endsWith("V")) {
                         String basis = type.getReturnType().getClassName();
                         String internal = ClassUtils.getBox(basis).replaceAll("\\.", "/");
-                        System.out.println("返回值" + internal);
                         mv.visitTypeInsn(CHECKCAST, internal);
-
-                        mv.visitMethodInsn(INVOKEVIRTUAL, internal, basis + "Value", "()" + type.getReturnType(), false);
+                        if (!basis.contains(".")) {
+                            mv.visitMethodInsn(INVOKEVIRTUAL, internal, basis + "Value", "()" + type.getReturnType(), false);
+                        }
+                        mv.visitInsn(MethodUtils.getReturnOpcode(Type.getType(info.descriptor)));
                     } else {
                         mv.visitInsn(POP);
                         l3 = new Label();
                         mv.visitJumpInsn(GOTO, l3);
                     }
-                    if (types.length==0){
-
-                    }
-//                    mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-//                    int opcode = MethodUtils.getReturnOpcode(Type.getType(info.descriptor));
-//                    //打印
-//                    System.out.println(info.name+":"+info.descriptor+":"+opcode);
-//                    mv.visitInsn(opcode);
-
-
                     mv.visitLabel(l1);
                     mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     mv.visitVarInsn(ALOAD, 0);
@@ -231,16 +245,13 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
                     mv.visitMethodInsn(INVOKESPECIAL, className.replaceAll("\\.", "/"), info.name, info.descriptor, false);
                     mv.visitInsn(MethodUtils.getReturnOpcode(Type.getType(info.descriptor)));
 
-                    if (l3!=null){
+                    if (l3 != null) {
                         mv.visitLabel(l3);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                         mv.visitInsn(RETURN);
-                    }else {
-                        mv.visitInsn(MethodUtils.getReturnOpcode(Type.getType(info.descriptor)));
                     }
                     mv.visitMaxs(1, 1);
                     mv.visitEnd();
-                    System.out.println("------------------");
                 }
 
 
@@ -251,10 +262,10 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
 
     public static void main(String[] args) throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         ClassEnhance enhance = new ClassEnhance();
-        enhance.setProxyClass(Bean1.class);
+        enhance.setProxyClass(JavaBean.class);
         byte[] proxyClass = enhance.createProxyClass();
         ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/proxy.class", proxyClass);
-        Class<?> aClass = enhance.defineClass("com.sproxy.test.Bean1$$proxy", proxyClass, 0, proxyClass.length);
+        Class<?> aClass = enhance.loader.findClass(enhance.getSubClassName(), proxyClass);
         Constructor<?> constructor = aClass.getConstructor(MethodCallBack.class);
 
         MethodCallBack callBack = (o, arg, m) -> {
@@ -263,9 +274,9 @@ public class ClassEnhance extends ClassLoader implements Opcodes {
             System.out.println("获得结果：" + invoke);
             return invoke;
         };
-        Bean1 instance = (Bean1) constructor.newInstance(callBack);
-        System.out.println(instance.hashCode());
-        instance.t1();
-
+        JavaBean instance = (JavaBean) constructor.newInstance(callBack);
+        instance.d("sdfasd");
     }
+
+
 }

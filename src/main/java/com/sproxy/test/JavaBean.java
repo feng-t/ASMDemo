@@ -5,8 +5,6 @@ public class JavaBean {
     public JavaBean() {
     }
 
-    public JavaBean(String s) {
-    }
 
     public void d(String s) {
         System.out.println("方法 d 被调用：" + s);

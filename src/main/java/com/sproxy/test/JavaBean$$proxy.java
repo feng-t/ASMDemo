@@ -1,12 +1,20 @@
 package com.sproxy.test;
 
+import com.sproxy.builder.ClassEnhance;
 import com.sproxy.method.MethodCallBack;
 import com.sproxy.method.MethodFastClass;
 import com.sproxy.method.MethodFastClassBuilder;
 import com.sproxy.method.MethodProxy;
+import com.sproxy.utils.ClassUtils;
 
 public class JavaBean$$proxy extends JavaBean {
     public static MethodFastClass methodFastClass;
+
+    static {
+        methodFastClass = MethodFastClassBuilder.getInstance().create(JavaBean.class, JavaBean$$proxy.class.getName());
+    }
+
+    public static ClassEnhance classEnhance;
     private MethodCallBack methodCallBack;
     private MethodProxy proxy1;
     private MethodProxy proxy2;
@@ -18,11 +26,6 @@ public class JavaBean$$proxy extends JavaBean {
         proxy1 = new MethodProxy(methodFastClass, "test", "()V");
         proxy2 = new MethodProxy(methodFastClass, "d", "(Ljava/lang/String;)V");
         proxy3 = new MethodProxy(methodFastClass, "ggg", "(II)I");
-    }
-
-    static {
-        methodFastClass = MethodFastClassBuilder.getInstance().create(JavaBean.class);
-//        methodFastClass =  new MethodFastClassImpl();
     }
 
 

@@ -1,11 +1,13 @@
 package com.sproxy.utils;
 
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.UUID;
 
 public class ClassUtils {
     public static String defineSubClassName(String className) {
@@ -85,6 +87,9 @@ public class ClassUtils {
         getParameterTypes("(IIJLjava/lang/Long;B)V");
     }
 
+    public static String uuid(){
+        return UUID.randomUUID().toString().substring(0,5);
+    }
 
     public static int getVarInst(String s){
         switch (s){
@@ -102,6 +107,35 @@ public class ClassUtils {
             case "Z":
                 return Opcodes.FLOAD;
             default:return Opcodes.ALOAD;
+        }
+    }
+    public static byte[] getFile(String filename) throws IOException {
+        File f = new File(filename);
+        if (!f.exists()) {
+            throw new FileNotFoundException(filename);
+        }
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream((int) f.length());
+        BufferedInputStream in = null;
+        try {
+            in = new BufferedInputStream(new FileInputStream(f));
+            int buf_size = 1024;
+            byte[] buffer = new byte[buf_size];
+            int len = 0;
+            while (-1 != (len = in.read(buffer, 0, buf_size))) {
+                bos.write(buffer, 0, len);
+            }
+            return bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            bos.close();
         }
     }
     public static void saveFile(String name, byte[] bytes) {

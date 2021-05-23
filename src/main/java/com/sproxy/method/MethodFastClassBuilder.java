@@ -1,5 +1,7 @@
 package com.sproxy.method;
 
+import com.sproxy.builder.ClassEnhance;
+import com.sproxy.builder.CustomClassLoader;
 import com.sproxy.utils.ClassUtils;
 import com.sproxy.utils.MethodUtils;
 import org.objectweb.asm.*;
@@ -14,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 创建一个fastclass
  */
-public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
+public class MethodFastClassBuilder implements Opcodes {
     public static Map<String, byte[]> map = new ConcurrentHashMap<>();
     public static Map<String, MethodFastClass> instances = new ConcurrentHashMap<>();
 
@@ -35,8 +37,7 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
     public List<String> methodDescriptors = Collections.synchronizedList(new ArrayList<>());
 
 
-    public Class<MethodFastClass> build(Class<?> proxyClass) {
-        String proxyName = proxyClass.getName().replaceAll("\\.", "/") + "$$proxy";
+    public Class<MethodFastClass> build(Class<?> proxyClass,String proxyName) {
         String fastClass = proxyClass.getName() + "$$FastClass";
         byte[] bytes = map.get(proxyName);
         if (bytes == null) {
@@ -44,13 +45,13 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
             try {
                 method = processMethod(proxyClass);
                 bytes = MethodUtils.createMethodFastClass(proxyName, fastClass.replaceAll("\\.", "/"), method.toArray(new String[0]));
-                ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/fastClass.class",bytes);
+                //ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/fastClass.class",bytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
             map.put(proxyName, bytes);
         }
-        return (Class<MethodFastClass>) defineClass(fastClass, bytes, 0, bytes.length);
+        return (Class<MethodFastClass>) CustomClassLoader.getInstance().findClass(fastClass, bytes);
     }
 
     /**
@@ -58,11 +59,11 @@ public class MethodFastClassBuilder extends ClassLoader implements Opcodes {
      * @param proxyClass
      * @return
      */
-    public MethodFastClass create(Class<?>proxyClass) {
+    public MethodFastClass create(Class<?>proxyClass,String proxyName) {
         String name = proxyClass.getName();
         MethodFastClass methodFastClass = instances.get(name);
         if (methodFastClass==null){
-            Class<MethodFastClass> build = build(proxyClass);
+            Class<MethodFastClass> build = build(proxyClass,proxyName);
             try {
                 methodFastClass = build.newInstance();
             } catch (InstantiationException | IllegalAccessException e) {
