@@ -10,19 +10,6 @@ import java.nio.channels.FileChannel;
 import java.util.UUID;
 
 public class ClassUtils {
-    public static String defineSubClassName(String className) {
-        return className + "$0";
-    }
-
-    public static String defineSubClassPath(String className) {
-        String replace = className.replaceAll("\\.", "/");
-        if (replace.endsWith("$0.class")) {
-            return replace;
-        } else if (replace.endsWith(".class")) {
-            return replace.replaceAll(".class", "$0.class");
-        }
-        return replace + "$0.class";
-    }
 
     public static Class<?> getBasisClass(Class<?> c) {
         if (c == Integer.class) {
@@ -45,6 +32,33 @@ public class ClassUtils {
         return c;
     }
 
+    public static Class<?> getBoxType(Class<?>c){
+        String s = c.getName();
+        switch (s) {
+            case "int":
+                return Integer.class;
+            case "short":
+                return Short.class;
+            case "long":
+                return Long.class;
+            case "char":
+                return Character.class;
+            case "double":
+                return Double.class;
+            case "float":
+                return Float.class;
+            case "boolean":
+                return Boolean.class;
+            case "byte":
+                return Byte.class;
+            default:
+                return c;
+        }
+    }
+    public static String getBox(Class<?> s){
+        String name = s.getName();
+        return getBox(name);
+    }
     public static String getBox(String s) {
         switch (s) {
             case "int":
@@ -78,37 +92,18 @@ public class ClassUtils {
         return boxId;
     }
 
-    public static String getReturnDes(String clazz) {
 
-        return null;
-    }
 
     public static void main(String[] args) {
-        getParameterTypes("(IIJLjava/lang/Long;B)V");
+
+        String box = getBox(int.class);
+        System.out.println(box);
     }
 
     public static String uuid(){
         return UUID.randomUUID().toString().substring(0,5);
     }
 
-    public static int getVarInst(String s){
-        switch (s){
-            case "I":
-            case "[I":
-            case "S":
-            case "B":
-                return Opcodes.ILOAD;
-            case "J":
-                return Opcodes.LLOAD;
-            case "C":
-            case "D":
-                return Opcodes.DLOAD;
-            case "F":
-            case "Z":
-                return Opcodes.FLOAD;
-            default:return Opcodes.ALOAD;
-        }
-    }
     public static byte[] getFile(String filename) throws IOException {
         File f = new File(filename);
         if (!f.exists()) {

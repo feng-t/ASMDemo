@@ -26,8 +26,7 @@ public class ClassEnhance implements Opcodes {
     private List<MethodInfo> createMethods = Collections.synchronizedList(new ArrayList<>());
     private byte[] bytes;
     private String subClassName;
-    private CustomClassLoader loader=CustomClassLoader.getInstance();
-
+    private CustomClassLoader loader = CustomClassLoader.getInstance();
 
 
     public void setProxyClass(Class<?> proxyClass) {
@@ -46,16 +45,19 @@ public class ClassEnhance implements Opcodes {
                 bytes = createProxyClass();
                 targetClass = loader.findClass(this.subClassName, bytes);
             }
-            Class<?>[] classes = new Class<?>[objects.length+1];
-            classes[0]=MethodCallBack.class;
+            Class<?>[] classes = new Class<?>[objects.length + 1];
+            Object[] objects1 = new Object[objects.length + 1];
+            objects1[0]=this.callBack;
+            classes[0] = MethodCallBack.class;
             for (int i = 1; i < objects.length; i++) {
                 Class<?> c = objects[i - 1].getClass();
                 if (c.isPrimitive()) {
-
+                    c = ClassUtils.getBoxType(c);
                 }
+                classes[i]=c;
             }
             Constructor<?> constructor = targetClass.getConstructor(classes);
-            obj = constructor.newInstance(objects);
+            obj = constructor.newInstance(objects1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -64,6 +66,10 @@ public class ClassEnhance implements Opcodes {
 
     public String getSubClassName() {
         return subClassName;
+    }
+
+    public byte[] getBytes() {
+        return bytes;
     }
 
     private byte[] createProxyClass() throws IOException {
@@ -147,7 +153,7 @@ public class ClassEnhance implements Opcodes {
                 Type[] types = type.getArgumentTypes();
                 for (int i = 1; i < types.length; i++) {
                     Type t = types[i];
-                    mv.visitVarInsn(ClassUtils.getVarInst(t.getInternalName()), i + 1);
+                    mv.visitVarInsn(MethodUtils.getVarInst(t.getInternalName()), i + 1);
                 }
 //                mv.visitTypeInsn(NEW, "com/sproxy/method/MethodProxy");
                 mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className.replaceAll("\\.", "/"), info.name, info.descriptor, false);
@@ -178,7 +184,7 @@ public class ClassEnhance implements Opcodes {
                 Type[] types = type.getArgumentTypes();
                 for (int i = 0; i < types.length; i++) {
                     Type t = types[i];
-                    mv.visitVarInsn(ClassUtils.getVarInst(t.getInternalName()), i + 1);
+                    mv.visitVarInsn(MethodUtils.getVarInst(t.getInternalName()), i + 1);
                 }
                 mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className.replaceAll("\\.", "/"), info.name, info.descriptor, false);
                 mv.visitInsn(MethodUtils.getReturnOpcode(Type.getType(info.descriptor)));
@@ -204,30 +210,36 @@ public class ClassEnhance implements Opcodes {
                     mv.visitIntInsn(SIPUSH, types.length);
                     //创建数组
                     mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+
                     for (int i = 0; i < types.length; i++) {
                         Type t = types[i];
                         mv.visitInsn(DUP);
                         mv.visitIntInsn(SIPUSH, i);
-                        mv.visitVarInsn(MethodUtils.getVarInst(t.getDescriptor()), i + 1);
+                        int varInst = MethodUtils.getVarInst(t.getDescriptor());
+                        mv.visitVarInsn(varInst, i + 1);
                         String td = t.getDescriptor();
-                        if (!td.contains("L")) {
+                        if (!td.contains("L")&&!td.contains("[")) {
                             String s = ClassUtils.getBox(t.getClassName()).replaceAll("\\.", "/");
                             mv.visitMethodInsn(INVOKESTATIC, s, "valueOf", "(" + td + ")L" + s + ";", false);
-                            System.out.println(s + "\t" + "valueOf" + "\t" + "(" + td + ")L" + s + ";");
                         }
-                        //mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
                         mv.visitInsn(AASTORE);
                     }
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, proxyName, "proxy" + map.get(info), "Lcom/sproxy/method/MethodProxy;");
                     mv.visitMethodInsn(INVOKEINTERFACE, "com/sproxy/method/MethodCallBack", "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;Lcom/sproxy/method/MethodProxy;)Ljava/lang/Object;", true);
 
+                    //设置返回值
                     if (!info.descriptor.endsWith("V")) {
-                        String basis = type.getReturnType().getClassName();
+                        Type returnType = type.getReturnType();
+                        String basis = returnType.getClassName();
                         String internal = ClassUtils.getBox(basis).replaceAll("\\.", "/");
-                        mv.visitTypeInsn(CHECKCAST, internal);
-                        if (!basis.contains(".")) {
+
+                        if (!basis.contains(".") && !basis.contains("[")) {
+                            mv.visitTypeInsn(CHECKCAST, internal);
                             mv.visitMethodInsn(INVOKEVIRTUAL, internal, basis + "Value", "()" + type.getReturnType(), false);
+                        }else {
+                            mv.visitTypeInsn(CHECKCAST, type.getReturnType().getInternalName());
+//                            mv.visitTypeInsn(CHECKCAST, "[I");
                         }
                         mv.visitInsn(MethodUtils.getReturnOpcode(Type.getType(info.descriptor)));
                     } else {
@@ -240,7 +252,8 @@ public class ClassEnhance implements Opcodes {
                     mv.visitVarInsn(ALOAD, 0);
                     for (int i = 0; i < types.length; i++) {
                         Type t = types[i];
-                        mv.visitVarInsn(ClassUtils.getVarInst(t.getInternalName()), i + 1);
+                        int varInst = MethodUtils.getVarInst(t.getInternalName());
+                        mv.visitVarInsn(varInst, i + 1);
                     }
                     mv.visitMethodInsn(INVOKESPECIAL, className.replaceAll("\\.", "/"), info.name, info.descriptor, false);
                     mv.visitInsn(MethodUtils.getReturnOpcode(Type.getType(info.descriptor)));
@@ -263,10 +276,9 @@ public class ClassEnhance implements Opcodes {
     public static void main(String[] args) throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         ClassEnhance enhance = new ClassEnhance();
         enhance.setProxyClass(JavaBean.class);
-        byte[] proxyClass = enhance.createProxyClass();
-        ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/proxy.class", proxyClass);
-        Class<?> aClass = enhance.loader.findClass(enhance.getSubClassName(), proxyClass);
-        Constructor<?> constructor = aClass.getConstructor(MethodCallBack.class);
+
+//        Class<?> aClass = enhance.loader.findClass(enhance.getSubClassName(), proxyClass);
+//        Constructor<?> constructor = aClass.getConstructor(MethodCallBack.class);
 
         MethodCallBack callBack = (o, arg, m) -> {
             System.out.println("调用前");
@@ -274,8 +286,13 @@ public class ClassEnhance implements Opcodes {
             System.out.println("获得结果：" + invoke);
             return invoke;
         };
-        JavaBean instance = (JavaBean) constructor.newInstance(callBack);
-        instance.d("sdfasd");
+        enhance.setCallBack(callBack);
+        JavaBean o = (JavaBean) enhance.create();
+        o.d("sdafds");
+        byte[] bytes = enhance.getBytes();
+        ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/proxy.class", bytes);
+//        JavaBean instance = (JavaBean) constructor.newInstance(callBack);
+//        instance.t2(new int[]{1});
     }
 
 

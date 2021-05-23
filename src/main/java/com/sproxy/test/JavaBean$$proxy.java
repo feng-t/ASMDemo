@@ -94,4 +94,30 @@ public class JavaBean$$proxy extends JavaBean {
             return super.t2();
         }
     }
+    @Override
+    public int[] t2(int[] a){
+        if (this.methodCallBack != null) {
+            return (int[]) this.methodCallBack.invoke(this, new Object[]{a}, proxy1);
+        } else {
+            return super.t2(a);
+        }
+    }
+
+    @Override
+    public int t3(int[] a) {
+        if (this.methodCallBack != null) {
+            return (int) this.methodCallBack.invoke(this, new Object[]{a}, proxy1);
+        } else {
+            return super.t3(a);
+        }
+    }
+
+    @Override
+    public int[] t3(int a) {
+        if (this.methodCallBack != null) {
+            return (int[]) this.methodCallBack.invoke(this, new Object[]{a}, proxy1);
+        } else {
+            return super.t3(a);
+        }
+    }
 }

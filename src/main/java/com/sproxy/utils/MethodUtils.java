@@ -139,9 +139,13 @@ public class MethodUtils implements Opcodes {
             mv.visitIntInsn(SIPUSH, i);
             mv.visitInsn(AALOAD);
             if (!descriptor.equals("[Ljava/lang/Object;")) {
-                mv.visitTypeInsn(CHECKCAST, ClassUtils.getBox(typeClassName).replaceAll("\\.","/"));
+                if (descriptor.contains("[")){
+                    mv.visitTypeInsn(CHECKCAST, descriptor);
+                }else {
+                    mv.visitTypeInsn(CHECKCAST, ClassUtils.getBox(typeClassName).replaceAll("\\.", "/"));
+                }
             }
-            if (!descriptor.contains("L")) {
+            if (!descriptor.contains("L")&&!descriptor.contains("[")) {
                 mv.visitMethodInsn(INVOKEVIRTUAL, box.replaceAll("\\.", "/"), typeClassName + "Value", "()" + descriptor, false);
             }
         }
@@ -175,7 +179,7 @@ public class MethodUtils implements Opcodes {
         }
         Type returnType = Type.getType(des).getReturnType();
         String descriptor = returnType.getDescriptor();
-        if (descriptor.contains("L")) {
+        if (descriptor.contains("L")||descriptor.contains("[")) {
             mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
             return;
         }
@@ -184,9 +188,9 @@ public class MethodUtils implements Opcodes {
     public static int getVarInst(String s){
         switch (s){
             case "I":
-            case "[I":
             case "S":
             case "B":
+            case "Z":
                 return Opcodes.ILOAD;
             case "J":
                 return Opcodes.LLOAD;
@@ -194,7 +198,6 @@ public class MethodUtils implements Opcodes {
             case "D":
                 return Opcodes.DLOAD;
             case "F":
-            case "Z":
                 return Opcodes.FLOAD;
             default:return Opcodes.ALOAD;
         }

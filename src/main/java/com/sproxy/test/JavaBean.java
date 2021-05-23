@@ -25,4 +25,13 @@ public class JavaBean {
     public int t2() {
         return 8;
     }
+    public int[] t2(int[] a){
+        return a;
+    }
+    public int[] t3(int a){
+        return new int[]{a};
+    }
+    public int t3(int[] a){
+        return 9;
+    }
 }

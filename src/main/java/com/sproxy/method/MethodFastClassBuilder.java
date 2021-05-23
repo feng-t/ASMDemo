@@ -45,7 +45,7 @@ public class MethodFastClassBuilder implements Opcodes {
             try {
                 method = processMethod(proxyClass);
                 bytes = MethodUtils.createMethodFastClass(proxyName, fastClass.replaceAll("\\.", "/"), method.toArray(new String[0]));
-                //ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/fastClass.class",bytes);
+                ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/fastClass.class",bytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }

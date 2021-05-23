@@ -5,4 +5,8 @@ public class Bean1 {
 //        return 9;
         System.out.println("t1");
     }
+
+    public int[] t2(int[] a){
+        return null;
+    }
 }
