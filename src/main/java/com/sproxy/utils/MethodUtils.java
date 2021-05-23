@@ -1,6 +1,7 @@
 package com.sproxy.utils;
 
 import com.sproxy.method.MethodFastClass;
+import com.sproxy.method.MethodInfo;
 import org.objectweb.asm.*;
 
 import java.util.*;
@@ -88,14 +89,15 @@ public class MethodUtils implements Opcodes {
                 }
                 mv.visitVarInsn(ALOAD, 4);
                 if (!methodInfo[1].startsWith("()")) {
-                    MethodUtils.transfer(mv, methodInfo[1], 3);
+                    //参数设置，强转参数
+                    transfer(mv, methodInfo[1], 3);
                 }
                 mv.visitMethodInsn(INVOKEVIRTUAL, proxyName, methodInfo[0] + "$proxy", methodInfo[1], false);
                 if (methodInfo[1].endsWith("V")) {
                     mv.visitInsn(ACONST_NULL);
                     mv.visitInsn(ARETURN);
                 } else {
-                    MethodUtils.returnType(mv, methodInfo[1]);
+                    MethodUtils.chengReturnType(mv, methodInfo[1]);
                     mv.visitInsn(ARETURN);
                 }
 
@@ -137,7 +139,7 @@ public class MethodUtils implements Opcodes {
             mv.visitIntInsn(SIPUSH, i);
             mv.visitInsn(AALOAD);
             if (!descriptor.equals("[Ljava/lang/Object;")) {
-                mv.visitTypeInsn(CHECKCAST, typeClassName.replaceAll("\\.","/"));
+                mv.visitTypeInsn(CHECKCAST, ClassUtils.getBox(typeClassName).replaceAll("\\.","/"));
             }
             if (!descriptor.contains("L")) {
                 mv.visitMethodInsn(INVOKEVIRTUAL, box.replaceAll("\\.", "/"), typeClassName + "Value", "()" + descriptor, false);
@@ -146,6 +148,11 @@ public class MethodUtils implements Opcodes {
         return mv;
     }
 
+    /**
+     * 创建默认构造方法
+     * @param cw
+     * @return
+     */
     public static MethodVisitor createInit(ClassWriter cw) {
         MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
         mv.visitCode();
@@ -157,7 +164,12 @@ public class MethodUtils implements Opcodes {
         return mv;
     }
 
-    public static void returnType(MethodVisitor mv, String des) {
+    /**
+     * 将返回值强转
+     * @param mv
+     * @param des
+     */
+    public static void chengReturnType(MethodVisitor mv, String des) {
         if (des.endsWith("V")) {
             return;
         }
@@ -168,5 +180,44 @@ public class MethodUtils implements Opcodes {
             return;
         }
         mv.visitMethodInsn(INVOKESTATIC, ClassUtils.getBox(returnType.getClassName()).replaceAll("\\.", "/"), "valueOf", "(" + descriptor + ")L" + ClassUtils.getBox(returnType.getClassName()).replaceAll("\\.", "/") + ";", false);
+    }
+    public static int getVarInst(String s){
+        switch (s){
+            case "I":
+            case "[I":
+            case "S":
+            case "B":
+                return Opcodes.ILOAD;
+            case "J":
+                return Opcodes.LLOAD;
+            case "C":
+            case "D":
+                return Opcodes.DLOAD;
+            case "F":
+            case "Z":
+                return Opcodes.FLOAD;
+            default:return Opcodes.ALOAD;
+        }
+    }
+
+    public static int getReturnOpcode(Type type){
+        String s = type.getReturnType().getDescriptor();
+        switch (s){
+            case "V":
+                return RETURN;
+            case "I":
+            case "S":
+            case "B":
+            case "Z":
+                return Opcodes.IRETURN;
+            case "J":
+                return Opcodes.LRETURN;
+            case "C":
+            case "D":
+                return Opcodes.DRETURN;
+            case "F":
+                return Opcodes.FRETURN;
+            default:return Opcodes.ARETURN;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.sproxy.utils;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.io.File;
@@ -85,6 +86,24 @@ public class ClassUtils {
     }
 
 
+    public static int getVarInst(String s){
+        switch (s){
+            case "I":
+            case "[I":
+            case "S":
+            case "B":
+                return Opcodes.ILOAD;
+            case "J":
+                return Opcodes.LLOAD;
+            case "C":
+            case "D":
+                return Opcodes.DLOAD;
+            case "F":
+            case "Z":
+                return Opcodes.FLOAD;
+            default:return Opcodes.ALOAD;
+        }
+    }
     public static void saveFile(String name, byte[] bytes) {
         FileOutputStream stream = null;
         try {

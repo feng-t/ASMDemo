@@ -16,4 +16,6 @@ public class MethodProxy {
         int index = methodFastClass.getIndex(sig.toString());
         return methodFastClass.invoke(index, obj, args);
     }
+
+
 }
