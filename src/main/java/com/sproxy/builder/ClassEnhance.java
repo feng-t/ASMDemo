@@ -3,22 +3,19 @@ package com.sproxy.builder;
 import com.sproxy.method.MethodCallBack;
 import com.sproxy.method.MethodFastClass;
 import com.sproxy.method.MethodInfo;
-import com.sproxy.test.Bean1;
-import com.sproxy.test.JavaBean;
+import com.sproxy.simple.JavaBean;
 import com.sproxy.utils.ClassUtils;
 import com.sproxy.utils.MethodUtils;
-import com.sun.org.apache.bcel.internal.generic.ALOAD;
 import org.objectweb.asm.*;
-import org.objectweb.asm.tree.analysis.Frame;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
-import static com.sun.jmx.snmp.ThreadContext.contains;
-
 public class ClassEnhance implements Opcodes {
+    public static final String proxyClassPath="asmPath:proxyClass";
+    public static final String fastClassPath="asmPath:fastClass";
     private Class<?> proxyClass;
     private Class<?> targetClass;
     private MethodCallBack callBack;
@@ -44,6 +41,10 @@ public class ClassEnhance implements Opcodes {
             if (bytes == null || targetClass == null) {
                 bytes = createProxyClass();
                 targetClass = loader.findClass(this.subClassName, bytes);
+            }
+            String path=null;
+            if ((path=System.getProperty(proxyClassPath))!=null) {
+                ClassUtils.saveFile(path+".class",bytes);
             }
             Class<?>[] classes = new Class<?>[objects.length + 1];
             Object[] objects1 = new Object[objects.length + 1];
@@ -271,28 +272,6 @@ public class ClassEnhance implements Opcodes {
             }
         }
         return cw.toByteArray();
-    }
-
-    public static void main(String[] args) throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        ClassEnhance enhance = new ClassEnhance();
-        enhance.setProxyClass(JavaBean.class);
-
-//        Class<?> aClass = enhance.loader.findClass(enhance.getSubClassName(), proxyClass);
-//        Constructor<?> constructor = aClass.getConstructor(MethodCallBack.class);
-
-        MethodCallBack callBack = (o, arg, m) -> {
-            System.out.println("调用前");
-            Object invoke = m.invoke(o, arg);
-            System.out.println("获得结果：" + invoke);
-            return invoke;
-        };
-        enhance.setCallBack(callBack);
-        JavaBean o = (JavaBean) enhance.create();
-        o.d("sdafds");
-        byte[] bytes = enhance.getBytes();
-        ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/proxy.class", bytes);
-//        JavaBean instance = (JavaBean) constructor.newInstance(callBack);
-//        instance.t2(new int[]{1});
     }
 
 

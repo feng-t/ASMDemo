@@ -1,12 +1,8 @@
 package com.sproxy.utils;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.UUID;
 
 public class ClassUtils {
@@ -93,12 +89,6 @@ public class ClassUtils {
     }
 
 
-
-    public static void main(String[] args) {
-
-        String box = getBox(int.class);
-        System.out.println(box);
-    }
 
     public static String uuid(){
         return UUID.randomUUID().toString().substring(0,5);

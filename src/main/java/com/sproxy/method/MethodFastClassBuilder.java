@@ -38,20 +38,24 @@ public class MethodFastClassBuilder implements Opcodes {
 
 
     public Class<MethodFastClass> build(Class<?> proxyClass,String proxyName) {
-        String fastClass = proxyClass.getName() + "$$FastClass";
+        String fastClass = proxyName + "$$FastClass";
         byte[] bytes = map.get(proxyName);
         if (bytes == null) {
             List<String> method = null;
             try {
                 method = processMethod(proxyClass);
-                bytes = MethodUtils.createMethodFastClass(proxyName, fastClass.replaceAll("\\.", "/"), method.toArray(new String[0]));
-                ClassUtils.saveFile("/Users/hu/IdeaProjects/ASMDemo/target/classes/fastClass.class",bytes);
+                bytes = MethodUtils.createMethodFastClass(proxyName, fastClass, method.toArray(new String[0]));
+                String path=null;
+                if ((path=System.getProperty(ClassEnhance.fastClassPath))!=null) {
+                    ClassUtils.saveFile(path+".class",bytes);
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
             map.put(proxyName, bytes);
         }
-        return (Class<MethodFastClass>) CustomClassLoader.getInstance().findClass(fastClass, bytes);
+        return (Class<MethodFastClass>) CustomClassLoader.getInstance().findClass(fastClass.replaceAll("/", "."), bytes);
     }
 
     /**

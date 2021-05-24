@@ -1,4 +1,4 @@
-package com.sproxy.test;
+package com.sproxy.simple;
 
 public class JavaBean {
 
